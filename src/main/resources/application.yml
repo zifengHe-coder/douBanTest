@@ -1,0 +1,77 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.42.215:3306/douban?serverTimezone=Asia/Shanghai&characterEncoding=utf-8
+    username: root
+    password: 123456
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 5
+  jpa:
+    database: mysql
+    hibernate:
+      database:
+        ddl-auto: update
+        use-new-id-generator-mappings: false
+        enable-lazy-load-no-trans: true
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    open-in-view: true
+    show-sql: true
+  mvc:
+    async:
+      request-timeout: 200000
+
+
+  main:
+    allow-bean-definition-overriding: true
+    logging:
+      level:
+        org.hibernate.SQL: debug
+        com.idaoben: debug
+        com.idaoben.utils.dto_assembler.MappingClassGenerator: info
+        ControllerMethodLoggingAspect: debug
+        com.huayin.web.exam.mapper: debug
+
+
+upload:
+  root:
+    dir: C:/data
+  max:
+    size: 50
+  image:
+    extension: jpg,jpeg,bmp,png
+  file:
+    extension: zip,rar,7z,doc,docx,xls,xlsx,ppt,pptx,pdf,txt,jpg,jpeg,bmp,png
+  url:
+    append:
+      path: true
+
+auth:
+  auth-debug-enabled: true
+
+# ----- 以下是mybatis的配置 -----
+mybatis-plus:
+  mapper-locations: classpath:/mapper/*.xml
+  configuration:
+    call-setters-on-nulls: true
+    map-underscore-to-camel-case: true
+
+# session超时时间为4小时
+#D – 天
+#H – 小时
+#M – 分钟
+#S – 秒
+server:
+  servlet:
+    session:
+      timeout: PT4H
+
+daoben:
+  framework:
+    file: true
+    url:
+      file: api/admin/file
+    captcha: true
+    captcha-disable: true
+    api-method-logging: true
+
