@@ -322,7 +322,12 @@
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.7.2</version>
+            <version>1.14.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.bpodgursky</groupId>
+            <artifactId>jbool_expressions</artifactId>
+            <version>1.23</version>
         </dependency>
     </dependencies>
 
@@ -369,6 +374,17 @@
             <id>thirdparty</id>
             <name>Third Party Release Repositories</name>
             <url>http://testing.idaoben.com:18090/nexus/content/repositories/thirdparty</url>
+        </repository>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <id>oss.sonatype.org-snapshot</id>
+            <name>Third Party Release Repositories</name>
+            <url>http://oss.sonatype.org/content/repositories/snapshots</url>
         </repository>
     </repositories>
 </project>
