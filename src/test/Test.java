@@ -88,4 +88,28 @@ public class Test {
         }
     }
 
+    @org.junit.Test
+    public void phoneValidTest() {
+        String phone = "0579-87102202";
+        if (isValidPhoneNumber(phone)) {
+            logger.info("校验通过");
+        } else {
+            logger.info("校验失败");
+        }
+    }
+
+    private boolean isValidPhoneNumber(String phoneNumber) {
+        // 匹配区号-固话格式，例如：010-12345678
+        String regex1 = "^0\\d{2,3}-\\d{7,8}$";
+
+        // 匹配固话格式，例如：12345678
+        String regex2 = "^\\d{7,8}$";
+
+        // 匹配手机号格式，例如：13812345678
+        String regex3 = "^1[3456789]\\d{9}$";
+
+        // 验证字符串是否符合以上三种格式之一
+        return phoneNumber.matches(regex1) || phoneNumber.matches(regex2) || phoneNumber.matches(regex3);
+    }
+
 }
