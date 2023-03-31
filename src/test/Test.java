@@ -1,12 +1,14 @@
-import com.bpodgursky.jbool_expressions.Expression;
-import com.bpodgursky.jbool_expressions.Not;
-import com.bpodgursky.jbool_expressions.Or;
-import com.bpodgursky.jbool_expressions.Variable;
+import com.bpodgursky.jbool_expressions.*;
 import com.bpodgursky.jbool_expressions.parsers.ExprParser;
 import com.bpodgursky.jbool_expressions.rules.RuleSet;
 import com.web.spirder.demo.PacongApplication;
+import com.web.spirder.demo.command.PlanDesignCommand;
 import com.web.spirder.demo.service.MovieSpiderService;
 import com.web.spirder.demo.service.impl.MovieSpiderServiceImpl;
+import com.web.spirder.demo.utils.JsonHelper;
+import com.web.spirder.demo.utils.ListUtils;
+import com.web.spirder.demo.vo.NearExpirationVo;
+import com.web.spirder.demo.vo.PlanVo;
 import org.apache.commons.lang.StringUtils;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -17,7 +19,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -77,11 +81,15 @@ public class Test {
         }
         if (StringUtils.isNotBlank(suffix)) {
             Expression<String> secondExpression = RuleSet.toDNF(ExprParser.parse(suffix));
-            logger.info("conditionLevel0 : {}", String.format("(%s)",prefix.substring(0, prefix.lastIndexOf("&") - 1)));
+            String formula0 = String.format("(%s)", prefix.substring(0, prefix.lastIndexOf("&") - 1));
+            logger.info("conditionLevel0 : {}", formula0);
+            List<String> varList = getExpressVar(formula0.replaceAll("\\(", "").replaceAll("\\)", ""));
             String[] expList = secondExpression.toString().substring(1, secondExpression.toString().length() - 1).split("\\|");
             int i = 1;
             for (String s : expList) {
-                logger.info("conditionLevel{} : {}", i++, s.substring(s.indexOf("(") > 0 ? 1 : 0));
+                String formulaI = s.substring(s.indexOf("(") > 0 ? 1 : 0);
+                varList = getExpressVar(formulaI.replaceAll("\\(", "").replaceAll("\\)", ""));
+                logger.info("conditionLevel{} : {}", i++, formulaI);
             }
         } else {
             logger.info("conditionLevel0 : {}", String.format("(%s)", prefix));
@@ -110,6 +118,82 @@ public class Test {
 
         // 验证字符串是否符合以上三种格式之一
         return phoneNumber.matches(regex1) || phoneNumber.matches(regex2) || phoneNumber.matches(regex3);
+    }
+
+    @org.junit.Test
+    public void planTest() {
+        Integer planId = 1;
+        List<NearExpirationVo> plans = new ArrayList<>();
+        PlanDesignCommand command = new PlanDesignCommand();
+        command.setPlanId(1);
+        command.setExpression("A&!(B|(C&D)|!E|(F&(G|H)))");
+        List<PlanVo> planList = new ArrayList<>();
+        planList.add(new PlanVo(0, null, "groupName", "Personal Care,Skincare,Cosmetics,General Merchandise", "in", "A"));
+        planList.add(new PlanVo(0, null, "className", "Baby Milk Powder", "is", "B"));
+        planList.add(new PlanVo(0, null, "deptId", "4001", "is", "C"));
+        planList.add(new PlanVo(1, "4", "udaValueDesc", "Own label / 自有品牌,Private Label", "in", "D"));
+        planList.add(new PlanVo(1, "1436", "udaValue", "0", "ne", "E"));
+        planList.add(new PlanVo(1, "49", "udaValue", "2", "is", "F"));
+        planList.add(new PlanVo(0, null, "deptId", "2006,2008", "in", "G"));
+        planList.add(new PlanVo(0, null, "groupName", "Skincare", "is", "H"));
+        command.setPlanList(planList);
+        Expression<String> expression = ExprParser.parse(command.getExpression());
+        Expression<String> simplify = RuleSet.simplify(expression);
+        Expression<String> cnf = RuleSet.toCNF(expression);
+        String exp = cnf.toString().substring(1, cnf.toString().length() - 1);
+        String prefix = exp;
+        String suffix = "";
+        Map<String, PlanVo> planMap = ListUtils.toMap(planList, PlanVo::getTag);
+
+        if(exp.indexOf("(") != -1) {
+            prefix = exp.substring(0, exp.indexOf("(") - 1);
+            suffix = exp.substring(exp.indexOf("("));
+        }
+        if (StringUtils.isNotBlank(suffix)) {
+            Expression<String> secondExpression = RuleSet.toDNF(ExprParser.parse(suffix));
+            String formula0 = String.format("(%s)", prefix.substring(0, prefix.lastIndexOf("&") - 1));
+            logger.info("简化后公式: {} & {}", formula0, secondExpression.toString());
+            plans.addAll(NearExpirationVo.convertPlanList(planId,0, planMap, getExpressVar(formula0.replaceAll("\\(", "").replaceAll("\\)", ""))));
+            logger.info("conditionLevel0 : {}", formula0);
+            String[] expList = secondExpression.toString().substring(1, secondExpression.toString().length() - 1).split("\\|");
+            int i = 1;
+            for (String s : expList) {
+                String formulaI = s.substring(s.indexOf("(") > 0 ? 1 : 0);
+                plans.addAll(NearExpirationVo.convertPlanList(planId, i, planMap, getExpressVar(formulaI.replaceAll("\\(", "").replaceAll("\\)", ""))));
+                logger.info("conditionLevel{} : {}", i++, formulaI);
+            }
+        } else {
+            logger.info("conditionLevel0 : {}", String.format("(%s)", prefix));
+            plans.addAll(NearExpirationVo.convertPlanList(planId,0, planMap, getExpressVar(prefix.replaceAll("\\(", "").replaceAll("\\)", ""))));
+        }
+        String json = JsonHelper.stringify(plans);
+        logger.info("近效期sop: {}", json);
+
+    }
+
+    @org.junit.Test
+    public void getVarTest() {
+        String content = "A&!B&E&";
+        if (content.lastIndexOf("&") == content.length() - 1) {
+            content = content.substring(0, content.length() - 1);
+        }
+        List<String> varList = getExpressVar(content);
+        logger.info("变量列表为:{}", varList.toString());
+    }
+
+    private List<String> getExpressVar(String str) {
+        List<String> varList = new ArrayList<>();
+        Expression<String> expression = ExprParser.parse(str);
+        if (expression instanceof Variable || expression instanceof Not) {
+            varList.add(expression.toString());
+        } else if (expression instanceof And) {
+            And andExpression = (And) expression;
+            List<Expression<String>> children = andExpression.getChildren();
+            for (Expression<String> child : children) {
+                varList.add(child.toString());
+            }
+        }
+        return varList;
     }
 
 }

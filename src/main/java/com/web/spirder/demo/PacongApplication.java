@@ -7,6 +7,7 @@ import com.web.spirder.demo.dao.repository.AdminRepository;
 import com.web.spirder.demo.security.AdminSecurityPrinciple;
 import com.web.spirder.demo.security.DebuggingAuthFilter;
 import com.web.spirder.demo.security.DebuggingAuthToken;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -30,7 +31,7 @@ import java.util.Collections;
 @EnableJpaRepositories(basePackageClasses = {AdminRepository.class}, repositoryBaseClass = BaseRepositoryImpl.class, repositoryImplementationPostfix = "ExtImpl")
 @EntityScan(basePackageClasses = {Admin.class})
 @EnableScheduling
-
+@MapperScan
 public class PacongApplication {
 
     public static void main(String[] args) {
