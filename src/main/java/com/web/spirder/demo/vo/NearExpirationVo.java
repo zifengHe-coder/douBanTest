@@ -101,6 +101,7 @@ public class NearExpirationVo {
             planList.add(nearExpirationVo);
             if (tag.startsWith("!")) {
                 PlanVo planVo = planMap.get(tag.substring(1));
+
                 BeanUtils.copyProperties(planVo, nearExpirationVo);
                 if (nearExpirationVo.getFromMongo() == 1) {
                     nearExpirationVo.setOperator(planVo.getOperator() + ";exclude");

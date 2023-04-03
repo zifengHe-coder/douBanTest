@@ -138,7 +138,7 @@ public class Test {
         planList.add(new PlanVo(0, null, "groupName", "Skincare", "is", "H"));
         command.setPlanList(planList);
         Expression<String> expression = ExprParser.parse(command.getExpression());
-        Expression<String> simplify = RuleSet.simplify(expression);
+//        Expression<String> simplify = RuleSet.simplify(expression);
         Expression<String> cnf = RuleSet.toCNF(expression);
         String exp = cnf.toString().substring(1, cnf.toString().length() - 1);
         String prefix = exp;
