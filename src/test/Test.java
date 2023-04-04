@@ -1,12 +1,15 @@
 import com.bpodgursky.jbool_expressions.*;
 import com.bpodgursky.jbool_expressions.parsers.ExprParser;
 import com.bpodgursky.jbool_expressions.rules.RuleSet;
+import com.idaoben.web.common.util.TimeUtils;
 import com.web.spirder.demo.PacongApplication;
 import com.web.spirder.demo.command.PlanDesignCommand;
 import com.web.spirder.demo.service.MovieSpiderService;
 import com.web.spirder.demo.service.impl.MovieSpiderServiceImpl;
 import com.web.spirder.demo.utils.JsonHelper;
 import com.web.spirder.demo.utils.ListUtils;
+import com.web.spirder.demo.utils.LogicalExpressionEvaluator;
+import com.web.spirder.demo.utils.TimingUtils;
 import com.web.spirder.demo.vo.NearExpirationVo;
 import com.web.spirder.demo.vo.PlanVo;
 import org.apache.commons.lang.StringUtils;
@@ -122,11 +125,23 @@ public class Test {
 
     @org.junit.Test
     public void planTest() {
+        TimingUtils.TickTock tickTock = new TimingUtils.TickTock();
+        tickTock.tick();
+        String formula = "A&!(B|(C&D)|!E|(F&(G|H)))";
+        if (LogicalExpressionEvaluator.evaluate(formula)) {
+            logger.info("校验通过!");
+        } else {
+            logger.info("校验失败!");
+            return;
+        }
+        tickTock.tock();
+        logger.info("校验耗时{}ms", tickTock.toMillis());
+        tickTock.tick();
         Integer planId = 1;
         List<NearExpirationVo> plans = new ArrayList<>();
         PlanDesignCommand command = new PlanDesignCommand();
         command.setPlanId(1);
-        command.setExpression("A&!(B|(C&D)|!E|(F&(G|H)))");
+        command.setExpression(formula);
         List<PlanVo> planList = new ArrayList<>();
         planList.add(new PlanVo(0, null, "groupName", "Personal Care,Skincare,Cosmetics,General Merchandise", "in", "A"));
         planList.add(new PlanVo(0, null, "className", "Baby Milk Powder", "is", "B"));
@@ -167,7 +182,8 @@ public class Test {
             plans.addAll(NearExpirationVo.convertPlanList(planId,0, planMap, getExpressVar(prefix.replaceAll("\\(", "").replaceAll("\\)", ""))));
         }
         String json = JsonHelper.stringify(plans);
-        logger.info("近效期sop: {}", json);
+        tickTock.tock();
+        logger.info("近效期sop: {},简化耗时: {}ms", json, tickTock.toMillis());
 
     }
 
@@ -194,6 +210,17 @@ public class Test {
             }
         }
         return varList;
+    }
+
+    @org.junit.Test
+    public void expressTest() {
+        String formula = "A&!(B|(C&D)|!E|(F&(G|H)))";
+        if (LogicalExpressionEvaluator.evaluate(formula)) {
+            logger.info("校验通过!");
+        } else {
+            logger.info("校验失败!");
+        }
+
     }
 
 }
